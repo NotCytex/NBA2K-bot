@@ -6,100 +6,116 @@ import numpy as np
 import sys
 import win32api, win32con, win32gui, win32com.client
 
-time.sleep(2)
+CONFIG = {
+    'tap': (0.1, 0.1),
+    'extra_short': (0.1, 0.2),
+    'short': (0.1, 0.3),
+    'medium': (0.5, 1),
+    'long': (1, 2),
+    'extra_long': (3, 5),
+    'hold': (9, 10)
+}
+WINDOW_NAME = "NBA 2K23"
 
-def inFocus():
-    window_name = "NBA 2K23"
-    hwnd = win32gui.FindWindow(None, window_name)
+def random_sleep(duration):
+    time.sleep(np.random.uniform(*CONFIG[duration]))
 
-    if win32gui.GetForegroundWindow() != hwnd:
-        print("NBA2K23 not in focus\nWill attempt to refocus NBA2K23 in 10 seconds")
-        counter = 0
-        while win32gui.GetForegroundWindow() != hwnd:
-            if counter > 10:
-                shell = win32com.client.Dispatch("WScript.Shell")
-                shell.SendKeys('%')
-                win32gui.SetForegroundWindow(hwnd) 
-                time.sleep(1)
-                if win32gui.GetForegroundWindow() != hwnd:
-                    print("Unable to refocus NBA2K23")
-                    sys.exit()
-                else:
-                    print("Successfully refocused")
+def in_focus():
+    hwnd = win32gui.FindWindow(None, WINDOW_NAME)
+    return win32gui.GetForegroundWindow() == hwnd
 
+def refocus():
+    hwnd = win32gui.FindWindow(None, WINDOW_NAME)
+    shell = win32com.client.Dispatch("WScript.Shell")
+    shell.SendKeys('%')
+    win32gui.SetForegroundWindow(hwnd)
+
+def ensure_focus():
+    if not in_focus():
+        print(f"{WINDOW_NAME} not in focus\nWill attempt to refocus {WINDOW_NAME} in 10 seconds")
+        for x in range(10):
             time.sleep(1)
-            counter += 1
+            if in_focus():
+                print("Refocused")
+                break
         else:
-            print("Refocused")
-        
+            refocus()
+            time.sleep(1)
+            if in_focus():
+                print("Successfully refocused")
+            else:
+                print("Unable to refocus")
+                sys.exit()
+
 def click(x, y):
-    inFocus()
-            
+    ensure_focus()
     win32api.SetCursorPos((x, y))
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
-    time.sleep(np.random.uniform(0.1, 0.3))
+    random_sleep('short')
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+
+def press(key, sleep_duration='short'):
+    ensure_focus()
+    keyboard.press(key)
+    random_sleep(sleep_duration)
+    keyboard.release(key)
 
 def locate(image):
     return pyautogui.locateOnScreen(image, grayscale=True, confidence=0.8)
 
-def press(key):
-    inFocus()
-    keyboard.press(key)
-    time.sleep(np.random.uniform(0.1, 0.3))
-    keyboard.release(key)
+def wait_for_image(image, timeout=None, action=None):
+    start_time = time.time()
+    while True:
+        location = locate(image)
+        if location != None:
+            return location
 
-def shortPress(key):
-    inFocus()
-    keyboard.press(key)
-    time.sleep(0.1)
-    keyboard.release(key)
+        if timeout and time.time() - start_time > timeout:
+            return None
+        
+        if action:
+            action()
 
-def hold(key):
-    inFocus()
-    keyboard.press(key)
-    time.sleep(np.random.uniform(9, 10))
-    keyboard.release(key)
+        time.sleep(1)
 
-while keyboard.is_pressed('q') == False:
-    time.sleep(2)
+while True:
+    print("Start")
+    random_sleep('extra_long')
 
     if locate('goatlogo.png') != None:
         print("Menu")
 
-        if locate('nextgame.png') != None:
+        if wait_for_image('nextgame.png', timeout=None) != None:
             playnext_point = pyautogui.center(locate('nextgame.png')) 
             click(playnext_point.x, playnext_point.y)
             print("Next game")
             
-            time.sleep(np.random.uniform(1, 2))
+            random_sleep('long')
 
             #Skip anything that popped up 
             if locate('goatlogo.png') == None:
                 print("Message popped up")
-                while locate('goatlogo.png') == None:
-                    press('2')
+                wait_for_image('goatlogo.png', timeout=10)
+                press('2')
 
             #Confirm play next game
             if locate('nextgame3.png') != None:
                 press('2')
             
-            time.sleep(np.random.uniform(1, 2))
+            random_sleep('long')
 
             #Check to skip team practice
             if locate('gsw_menu.png') == None:
                 print("Skip team practice")
-                keyboard.press('d')
-                time.sleep(np.random.uniform(0.1, 0.2))
-                keyboard.release('d')
-                time.sleep(np.random.uniform(1, 1.5))
+                press('d', sleep_duration='extra_short')
+                random_sleep('long')
 
-            time.sleep(np.random.uniform(1, 1.5))
+            random_sleep('long')
             
             #Skip pick uniform
             while locate('yes.png') == None:
                 press('2')
-                time.sleep(np.random.uniform(0.5, 1))
+                random_sleep('medium')
 
             #Confirm start game
             yes_point = pyautogui.center(locate('yes.png'))
@@ -108,28 +124,17 @@ while keyboard.is_pressed('q') == False:
 
             #Start game when loaded
             print("Loading game")
-            while locate('continue.png') == None:
-                time.sleep(1)
+            wait_for_image('continue.png')
             press('2')
             print("Started")
 
             #Open pause menu
-            paused = False
-            while paused == False:
-                if locate('nba_logo.png') == None:
-                    press('esc')
-                    time.sleep(np.random.uniform(0.5, 1.5))
-                else:
-                    print("Paused")
-                    paused = True
+            wait_for_image('nba_logo.png', action=lambda: press('esc'))
 
             #Navigate to simcast
             for x in range(8):
-                inFocus()
-                keyboard.press('d')
-                time.sleep(np.random.uniform(0.1, 0.2))
-                keyboard.release('d')
-                time.sleep(np.random.uniform(0.1, 0.5))
+                press('d', sleep_duration='tap')
+                random_sleep('medium')
 
             press('2')
 
@@ -144,57 +149,45 @@ while keyboard.is_pressed('q') == False:
             print("Simcasting")
 
             #Skip timeout and halftime
-            end = False
-            while end == False:
-                press('2')
-                time.sleep(np.random.uniform(1, 1.5))
-                if locate('mypoints.png') != None:
-                    time.sleep(15)
-                    end = True
-                    
+            wait_for_image('mypoints.png', action=lambda: press('2'))
+            time.sleep(15)                    
             print("End")
 
-            time.sleep(np.random.uniform(8, 10))
+            random_sleep('extra_long')
 
     else:
-        inFocus()
+        print("else")
+        ensure_focus()
 
-        time.sleep(2)
-        if locate('contract.png') != None:
+        random_sleep('extra_long')
 
-            print("Contract")
-            press('2')
+        #stuck here need add timeout
+        wait_for_image('contract.png')
+        print("Contract")
+        press('2')
 
-            if locate('goatlogo.png') != None:
-                print("Returned to menu")
+        if wait_for_image('goatlogo.png', timeout=5) != None:
+            print("Returned to menu")
+
+        else:
+            random_sleep('long') 
+
+            wait_for_image('vc.png', action=lambda: press('2'))
+            
+            if locate('counteroffer.png'):
+                press('2')
 
             else:
-                time.sleep(1)
-
-                while locate('vc.png') == None:
-                    press('2')
-                    time.sleep(1)
-
-                if locate('counteroffer.png'):
-                    press('2')
-
                 #Max money, 0 incentive + discount
-                hold('d')
-                time.sleep(np.random.uniform(0.5, 1))
-                shortPress('s')
-                time.sleep(np.random.uniform(0.5, 1))
-                hold('a')
-                time.sleep(np.random.uniform(0.5, 1))
-                shortPress('s')
-                time.sleep(np.random.uniform(0.5, 1))
-                hold('a')
-                time.sleep(np.random.uniform(0.5, 1))
-                
-                time.sleep(np.random.uniform(3, 5))
+                press('d', sleep_duration='hold')
+                random_sleep('medium')
+                press('s', sleep_duration='tap')
+                random_sleep('medium')
+                press('a', sleep_duration='hold')
+                random_sleep('medium')
+                press('s', sleep_duration='tap')
+                random_sleep('medium')
+                press('a', sleep_duration='hold')
+                random_sleep('medium')
 
-                while locate('goatlogo.png') == None:
-                    press('2')
-                    time.sleep(np.random.uniform(3, 5))
-        #else:
-         #   press('2')
-        time.sleep(1)
+                wait_for_image('goatlogo.png', action=lambda: press('2'))
