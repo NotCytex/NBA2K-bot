@@ -16,6 +16,7 @@ CONFIG = {
     'hold': (9, 10)
 }
 WINDOW_NAME = "NBA 2K23"
+COUNTER = 1
 
 def random_sleep(duration):
     time.sleep(np.random.uniform(*CONFIG[duration]))
@@ -78,14 +79,19 @@ def wait_for_image(image, timeout=None, action=None):
 
         time.sleep(1)
 
-while True:
-    print("Start")
+while keyboard.is_pressed('q') == False:
+    print("Begin")
     random_sleep('extra_long')
 
+    if locate('mc.png') != None:
+            print("Exiting season prizes")
+            wait_for_image('goatlogo.png', action=lambda: press('3'))
+    
     if locate('goatlogo.png') != None:
+        print("Round " + str(COUNTER))
         print("Menu")
 
-        if wait_for_image('nextgame.png', timeout=None) != None:
+        if wait_for_image('nextgame.png') != None:
             playnext_point = pyautogui.center(locate('nextgame.png')) 
             click(playnext_point.x, playnext_point.y)
             print("Next game")
@@ -149,35 +155,26 @@ while True:
             print("Simcasting")
 
             #Skip timeout and halftime
-            wait_for_image('mypoints.png', action=lambda: press('2'))
-            time.sleep(15)                    
+            wait_for_image('mypoints.png', action=lambda: press('2'))                 
             print("End")
-
-            random_sleep('extra_long')
+            COUNTER += 1
 
     else:
-        print("else")
-        ensure_focus()
+        if locate('contract.png') != None:
+            print("Contract")
+            press('2')
 
-        random_sleep('extra_long')
-
-        #stuck here need add timeout
-        wait_for_image('contract.png')
-        print("Contract")
-        press('2')
-
-        if wait_for_image('goatlogo.png', timeout=5) != None:
-            print("Returned to menu")
-
-        else:
-            random_sleep('long') 
-
-            wait_for_image('vc.png', action=lambda: press('2'))
-            
-            if locate('counteroffer.png'):
-                press('2')
+            if wait_for_image('goatlogo.png', timeout=3) != None:
+                print("Returned to menu")
 
             else:
+                random_sleep('long') 
+
+                wait_for_image('vc.png', action=lambda: press('2'))
+                
+                wait_for_image('counteroffer.png')
+                press('2')
+
                 #Max money, 0 incentive + discount
                 press('d', sleep_duration='hold')
                 random_sleep('medium')
