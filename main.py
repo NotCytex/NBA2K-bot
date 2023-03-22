@@ -80,7 +80,6 @@ def wait_for_image(image, timeout=None, action=None):
         time.sleep(1)
 
 while keyboard.is_pressed('q') == False:
-    print("Begin")
     random_sleep('extra_long')
 
     if locate('mc.png') != None:
