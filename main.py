@@ -118,9 +118,7 @@ while keyboard.is_pressed('q') == False:
             random_sleep('long')
             
             #Skip pick uniform
-            while locate('yes.png') == None:
-                press('2')
-                random_sleep('medium')
+            wait_for_image('yes.png', action=lambda: press('2'))
 
             #Confirm start game
             yes_point = pyautogui.center(locate('yes.png'))
