@@ -1,2 +1,2 @@
 # NBA2K-bot
- Automate simcast live
+Image recognition bot to automate going through simcast live games in NBA2K23
