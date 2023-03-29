@@ -1,5 +1,4 @@
 import pyautogui
-from pyautogui import *
 import time
 import keyboard
 import numpy as np
@@ -82,7 +81,7 @@ def wait_for_image(image, timeout=None, action=None):
 while keyboard.is_pressed('q') == False:
     random_sleep('extra_long')
 
-    if locate('mc.png') != None:
+    if locate('images\mc.png') != None:
             print("Exiting season prizes")
             wait_for_image('goatlogo.png', action=lambda: press('3'))
     
