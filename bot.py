@@ -60,7 +60,7 @@ def press(key, sleep_duration='short'):
     keyboard.release(key)
 
 def locate(image):
-    return pyautogui.locateOnScreen(image, grayscale=True, confidence=0.8)
+    return pyautogui.locateOnScreen(image, grayscale=True, confidence=0.5)
 
 def wait_for_image(image, timeout=None, action=None):
     start_time = time.time()
@@ -80,10 +80,6 @@ def wait_for_image(image, timeout=None, action=None):
 def main(flag):
     while flag[0]:
         random_sleep('extra_long')
-
-        if locate('images/mc.png') != None:
-                print("Return to menu")
-                wait_for_image('images/goatlogo.png', action=lambda: press('3'))
         
         if locate('images/goatlogo.png') != None:
             print("Menu")
@@ -154,6 +150,14 @@ def main(flag):
                 print("End")
 
         else:
+            if locate('images/allstar.png') != None:
+                print("Return to menu")
+                wait_for_image('images/goatlogo.png', action=lambda: press('2'))
+
+            if locate('images/mc.png') != None:
+                print("Return to menu")
+                wait_for_image('images/goatlogo.png', action=lambda: press('3'))
+
             if locate('images/contract.png') != None:
                 print("Contract")
                 press('2')
